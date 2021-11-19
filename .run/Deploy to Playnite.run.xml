@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Deploy to Playnite" type="DotNetFolderPublish" factoryName="Publish to folder">
+    <riderPublish configuration="Release" platform="Any CPU" runtime="Portable" target_folder="$USER_HOME$/AppData/Roaming/Playnite/Extensions/PlayniteMultiMCLibrary" target_framework="net48" uuid_high="-4622704649447062628" uuid_low="-8245602906450873724" />
+    <method v="2" />
+  </configuration>
+</component>

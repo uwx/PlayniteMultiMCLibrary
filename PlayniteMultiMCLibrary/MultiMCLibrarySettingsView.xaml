@@ -1,0 +1,21 @@
+﻿<UserControl x:Class="MultiMcLibrary.MultiMcLibrarySettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:proj="clr-namespace:MultiMcLibrary"
+             mc:Ignorable="d"
+             d:DesignHeight="400" d:DesignWidth="600" d:DataContext="{d:DesignInstance proj:MultiMcLibrarySettingsViewModel}">
+    <StackPanel>
+        <TextBlock Text="Path to MultiMC folder:"/>
+        <TextBox Text="{Binding Settings.MultiMcFolder}"/>
+        <TextBlock Text="Instance name display formatting:" Padding="0,15,0,0"/>
+        <TextBox Text="{Binding Settings.InstanceNameFormat}"/>
+        <TextBlock Padding="0,0,0,15">
+            Valid tokens:
+            <Run Text="{Binding CommaSeparatedValidTokens, Mode=OneWay}"></Run>
+        </TextBlock>
+        <CheckBox IsChecked="{Binding Settings.UpdatePlaytimeOnClose}" Content="Update playtime when Minecraft is closed"></CheckBox>
+        <CheckBox IsChecked="{Binding Settings.UpdateDescriptionOnClose}" Content="Update description when version or modlist change"></CheckBox>
+    </StackPanel>
+</UserControl>
