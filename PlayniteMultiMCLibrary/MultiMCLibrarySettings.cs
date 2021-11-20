@@ -1,20 +1,26 @@
 ﻿using Playnite.SDK;
 using Playnite.SDK.Data;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace MultiMcLibrary
 {
     public class MultiMcLibrarySettings : ObservableObject
     {
-        private string _multiMcFolder = string.Empty;
+        private string _multiMcPath = string.Empty;
         private string _instanceNameFormat = "Minecraft {InstanceName}";
         private bool _updatePlaytimeOnClose = true;
         private bool _updateDescriptionOnClose = true;
+        private bool _useVersionCovers = true;
+        private bool _useVersionBackgrounds = true;
 
-        public string MultiMcFolder { get => _multiMcFolder; set => SetValue(ref _multiMcFolder, value); }
+        [JsonProperty("MultiMcFolder")]
+        public string MultiMcPath { get => _multiMcPath; set => SetValue(ref _multiMcPath, value); }
         public string InstanceNameFormat { get => _instanceNameFormat; set => SetValue(ref _instanceNameFormat, value); }
         public bool UpdatePlaytimeOnClose { get => _updatePlaytimeOnClose; set => SetValue(ref _updatePlaytimeOnClose, value); }
         public bool UpdateDescriptionOnClose { get => _updateDescriptionOnClose; set => SetValue(ref _updateDescriptionOnClose, value); }
+        public bool UseVersionCovers { get => _useVersionCovers; set => SetValue(ref _useVersionCovers, value); }
+        public bool UseVersionBackgrounds { get => _useVersionBackgrounds; set => SetValue(ref _useVersionBackgrounds, value); }
     }
 
     public class MultiMcLibrarySettingsViewModel : ObservableObject, ISettings

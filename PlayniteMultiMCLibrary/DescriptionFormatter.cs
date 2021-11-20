@@ -98,9 +98,8 @@ namespace MultiMcLibrary
                 // ReSharper disable once CoVariantArrayConversion
                 Task.WaitAll(tasks);
 
-                foreach (var task in tasks)
+                foreach (var (enabled, mods) in tasks.Select(e => e.Result))
                 {
-                    var (enabled, mods) = task.Result;
                     foreach (var (modid, name, version) in mods)
                     {
                         sb.Append(enabled ? "✅ " : "❎ ");
@@ -118,8 +117,10 @@ namespace MultiMcLibrary
         private static Task<(bool Enabled, IReadOnlyList<Mod> Mods)> FetchModsAsync(string file)
         {
             var fileInfo = new FileInfo(file);
-            var fileName = Path.GetFileNameWithoutExtension(file);
-            var cacheKey = (fileName: fileName, fileInfo.Length, fileInfo.LastWriteTime);
+            var cleanName = Path.GetFileName(file)
+                .Replace(".jar.disabled", "")
+                .Replace(".jar", "");
+            var cacheKey = (fileName: cleanName, fileInfo.Length, fileInfo.LastWriteTime);
 
             var enabled = file.EndsWith(".jar");
 
@@ -132,74 +133,7 @@ namespace MultiMcLibrary
             {
                 try
                 {
-                    IReadOnlyList<Mod> mods;
-
-                    using var archive = ZipFile.OpenRead(file);
-
-                    if (archive.Entries.FirstOrDefault(e => e.FullName == "fabric.mod.json") is {} fabricModEntry)
-                    {
-                        // load fabric modinfo
-                        
-                        using var entryStream = fabricModEntry.Open();
-                        using var reader = new StreamReader(entryStream);
-
-                        var json = await reader.ReadToEndAsync() ?? "{}";
-
-                        var fabricMod = JsonConvert.DeserializeObject<FabricMod>(json);
-
-                        mods = new Mod[] { new(fabricMod.Id, fabricMod.Name, fabricMod.Version) };
-                    }
-                    else if (archive.Entries.FirstOrDefault(e => e.FullName == "mcmod.info") is {} mcmodEntry)
-                    {
-                        // load forge modinfo
-                        
-                        using var entryStream = mcmodEntry.Open();
-                        using var reader = new StreamReader(entryStream);
-
-                        var json = await reader.ReadToEndAsync() ?? "[]";
-
-                        json = json.TrimStart();
-
-                        try
-                        {
-                            if (json.StartsWith("{"))
-                            {
-                                // load old modinfo format
-                                var oldModInfo = JsonConvert.DeserializeObject<OldMcmodInfo>(json);
-
-                                mods = oldModInfo.ModList.Select(e => new Mod(e.Modid, e.Name, e.Version)).ToArray();
-                            }
-                            else
-                            {
-                                // load new modinfo format
-                                IReadOnlyList<McModInfo> newModInfos = JsonConvert.DeserializeObject<McModInfo[]>(json);
-
-                                mods = newModInfos.Select(e => new Mod(e.Modid, e.Name, e.Version)).ToArray();
-                            }
-                        }
-                        catch (JsonReaderException) // Bad JSON format for modinfo, this is allowed but I don't know how to handle it
-                        {
-                            var modid = ModidRegex.Match(json).Groups?[1].Value;
-                            var name = NameRegex.Match(json).Groups?[1].Value;
-                            var version = VersionRegex.Match(json).Groups?[1].Value;
-                            
-                            if (!string.IsNullOrWhiteSpace(modid))
-                            {
-                                mods = new Mod[] { new(modid!, name, version) };
-                            }
-                            else
-                            {
-                                // no bruteforce regex match, just add filename
-                                mods = new Mod[] { new(fileName, null, null) };
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // no modinfo exists, just add filename
-
-                        mods = new Mod[] { new(fileName, null, null) };
-                    }
+                    var mods = await LoadModsFromJarAsync(file, cleanName);
 
                     ModInfoCache.TryAdd(cacheKey, mods);
 
@@ -210,6 +144,78 @@ namespace MultiMcLibrary
                     throw new InvalidOperationException($"During processing of loader mod {file}", ex);
                 }
             });
+        }
+
+        private static async Task<IReadOnlyList<Mod>> LoadModsFromJarAsync(string file, string cleanName)
+        {
+            using var archive = ZipFile.OpenRead(file);
+
+            if (archive.Entries.FirstOrDefault(e => e.FullName == "fabric.mod.json") is { } fabricModEntry)
+            {
+                // load fabric modinfo
+
+                using var entryStream = fabricModEntry.Open();
+                using var reader = new StreamReader(entryStream);
+
+                var json = await reader.ReadToEndAsync() ?? "{}";
+
+                var fabricMod = JsonConvert.DeserializeObject<FabricMod>(json);
+
+                return new Mod[] { new(fabricMod.Id, fabricMod.Name, fabricMod.Version) };
+            }
+
+            if (archive.Entries.FirstOrDefault(e => e.FullName == "mcmod.info") is { } mcmodEntry)
+            {
+                // load forge modinfo
+
+                using var entryStream = mcmodEntry.Open();
+                using var reader = new StreamReader(entryStream);
+
+                var json = await reader.ReadToEndAsync();
+
+                if (json == null)
+                {
+                    // no modinfo exists, just add filename
+                    return new Mod[] { new(cleanName, null, null) };
+                }
+
+                json = json.TrimStart();
+
+                try
+                {
+                    if (json.StartsWith("{"))
+                    {
+                        // load old modinfo format
+                        var oldModInfo = JsonConvert.DeserializeObject<OldMcmodInfo>(json);
+
+                        return oldModInfo.ModList.Select(e => new Mod(e.Modid, e.Name, e.Version)).ToArray();
+                    }
+                    else
+                    {
+                        // load new modinfo format
+                        var newModInfos = JsonConvert.DeserializeObject<McModInfo[]>(json);
+
+                        return newModInfos.Select(e => new Mod(e.Modid, e.Name, e.Version)).ToArray();
+                    }
+                }
+                catch (JsonReaderException) // Bad JSON format for modinfo, this is allowed but I don't know how to handle it
+                {
+                    var modid = ModidRegex.Match(json).Groups?[1].Value;
+                    var name = NameRegex.Match(json).Groups?[1].Value;
+                    var version = VersionRegex.Match(json).Groups?[1].Value;
+
+                    if (!string.IsNullOrWhiteSpace(modid))
+                    {
+                        return new Mod[] { new(modid!, name, version) };
+                    }
+
+                    // no bruteforce regex match, just add filename
+                    return new Mod[] { new(cleanName, null, null) };
+                }
+            }
+            
+            // no applicable modinfo exists, just add filename
+            return new Mod[] { new(cleanName, null, null) };
         }
     }
 }

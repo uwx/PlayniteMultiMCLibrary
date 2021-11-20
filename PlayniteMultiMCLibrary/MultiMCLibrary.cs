@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Controls;
 using Newtonsoft.Json;
 using Playnite.SDK;
@@ -19,7 +20,7 @@ namespace MultiMcLibrary
         private static readonly ILogger Logger = LogManager.GetLogger();
 
         private MultiMcLibrarySettingsViewModel SettingsViewModel { get; }
-        private MultiMcLibrarySettings Settings => SettingsViewModel.Settings;
+        internal MultiMcLibrarySettings Settings => SettingsViewModel.Settings;
 
         public override Guid Id { get; } = Guid.Parse("6ab2531e-4800-404b-a938-4421b28a9f3e");
 
@@ -28,11 +29,10 @@ namespace MultiMcLibrary
         // Implementing Client adds ability to open it via special menu in playnite.
         public override LibraryClient Client { get; }
 
-        public string MultiMcPath => Settings.MultiMcFolder;
-        public string InstanceNameFormat => Settings.InstanceNameFormat;
+        public string MultiMcPath => Settings.MultiMcPath;
 
         private readonly GameMenuItem[] _gameMenuItems;
-        
+
         public MultiMcLibrary(IPlayniteAPI api) : base(api)
         {
             SettingsViewModel = new MultiMcLibrarySettingsViewModel(this);
@@ -79,7 +79,7 @@ namespace MultiMcLibrary
         internal void SettingsChanged(MultiMcLibrarySettings before, MultiMcLibrarySettings after)
         {
             // Update game actions when MultiMC folder path changes
-            if (before.MultiMcFolder != after.MultiMcFolder)
+            if (before.MultiMcPath != after.MultiMcPath)
             {
                 PlayniteApi.Database.Games.BeginBufferUpdate();
                 foreach (var game in PlayniteApi.Database.Games)
@@ -152,10 +152,10 @@ namespace MultiMcLibrary
             PlayniteApi.Database.Games.EndBufferUpdate();
         }
 
-        private bool TryGetInstanceInfo(string instanceFolderName, [NotNullWhen(true)] out InstanceCfg? cfg, [NotNullWhen(true)] out MultiMcPack? pack)
+        internal bool TryGetInstanceInfo(string instanceFolderName, [NotNullWhen(true)] out InstanceCfg? cfg, [NotNullWhen(true)] out MultiMcPack? pack, [NotNullWhen(true)] out string? instanceFolder)
         {
-            var instanceFolder = Path.Combine(MultiMcPath, "instances", instanceFolderName);
-                
+            instanceFolder = Path.Combine(MultiMcPath, "instances", instanceFolderName);
+
             var cfgPath = Path.Combine(instanceFolder, "instance.cfg");
             var packPath = Path.Combine(instanceFolder, "mmc-pack.json");
 
@@ -172,9 +172,16 @@ namespace MultiMcLibrary
             return pack != null;
         }
 
+        internal bool TryGetInstanceInfo(Game game, [NotNullWhen(true)] out InstanceCfg? cfg, [NotNullWhen(true)] out MultiMcPack? pack, [NotNullWhen(true)] out string? instanceFolder)
+        {
+            return TryGetInstanceInfo(GetFolderName(game), out cfg, out pack, out instanceFolder);
+        }
+
+        public static string GetFolderName(Game game) => game.GameId;
+
         private void UpdateGameDetails(Game game, bool forcePlaytime = false, bool forceDescription = false)
         {
-            if (!TryGetInstanceInfo(GetFolderName(game), out var cfg, out var pack))
+            if (!TryGetInstanceInfo(game, out var cfg, out var pack, out var instanceFolder))
             {
                 return;
             }
@@ -194,7 +201,7 @@ namespace MultiMcLibrary
 
             if (forceDescription || Settings.UpdateDescriptionOnClose)
             {
-                game.Description = DescriptionFormatter.FormatDescription(Path.Combine(MultiMcPath, "instances", GetFolderName(game)), cfg, pack);
+                game.Description = DescriptionFormatter.FormatDescription(instanceFolder, cfg, pack);
             }
         }
 
@@ -202,26 +209,20 @@ namespace MultiMcLibrary
         {
             if (string.IsNullOrWhiteSpace(MultiMcPath))
             {
-                return Array.Empty<GameMetadata>();
+                yield break;
             }
             
-            var instances = GetInstances();
-
-            var gameList = new List<GameMetadata>();
-            
+            var instances = GetInstancesWithGroups();
             foreach (var instance in instances)
             {
-                if (!TryGetInstanceInfo(instance.FolderName, out var cfg, out var pack))
+                if (!TryGetInstanceInfo(instance.FolderName, out var cfg, out var pack, out var instanceFolder))
                 {
                     continue;
                 }
-                
-                var instanceFolder = Path.Combine(MultiMcPath, "instances", instance.FolderName);
 
-                gameList.Add(new GameMetadata
+                yield return new GameMetadata
                 {
-                    Name = TokenFormatter.FormatString(InstanceNameFormat, cfg, pack),
-                    Description = DescriptionFormatter.FormatDescription(instanceFolder, cfg, pack),
+                    Name = TokenFormatter.FormatString(Settings.InstanceNameFormat, cfg, pack),
                     GameId = instance.FolderName,
                     InstallDirectory = instanceFolder,
                     ReleaseDate = new ReleaseDate(2011, 11, 18),
@@ -234,7 +235,6 @@ namespace MultiMcLibrary
                     IsInstalled = true,
                     Playtime = cfg.TotalTimePlayed ?? 0, // seconds
                     LastActivity = cfg.LastLaunchDateTime,
-                    Icon = GetValidIcon(cfg),
                     GameActions = new List<GameAction>
                     {
                         new()
@@ -244,29 +244,13 @@ namespace MultiMcLibrary
                             WorkingDir = MultiMcPath,
                             Name = "Launch MultiMC",
                         }
-                    }
-                });
+                    },
+                };
             }
-
-            return gameList.ToArray();
         }
 
-        private MetadataFile? GetValidIcon(InstanceCfg instanceCfg)
-        {
-            var pathOptions = new[]
-            {
-                Path.Combine(MultiMcPath, $"icons/{instanceCfg.IconKey}.png"),
-                Path.Combine(AssemblyPath, $"icons/{instanceCfg.IconKey}.png"),
-            };
-            
-            Logger.Info(Path.Combine(MultiMcPath, $"icons/{instanceCfg.IconKey}.png"));
-            Logger.Info(Path.Combine(AssemblyPath, $"icons/{instanceCfg.IconKey}.png"));
-
-            var foundPath = pathOptions.FirstOrDefault(File.Exists);
-            return foundPath != null ? new MetadataFile(foundPath) : null;
-        }
-
-        private IReadOnlyList<GroupedInstance> GetInstances()
+        private readonly record struct GroupedInstance(string? Group, string FolderName);
+        private IEnumerable<GroupedInstance> GetInstancesWithGroups()
         {
             if (!Directory.Exists(Path.Combine(MultiMcPath, "instances")))
             {
@@ -299,10 +283,11 @@ namespace MultiMcLibrary
                 }
             }
 
-            return instanceList.Values.ToArray();
+            return instanceList.Values;
         }
 
-        private static string GetFolderName(Game game) => game.GameId;
+        public override LibraryMetadataProvider GetMetadataDownloader()
+            => new MultiMcMetadataProvider(this);
 
         public override IEnumerable<PlayController> GetPlayActions(GetPlayActionsArgs args)
         {
@@ -325,6 +310,4 @@ namespace MultiMcLibrary
         public override ISettings GetSettings(bool firstRunSettings) => SettingsViewModel;
         public override UserControl GetSettingsView(bool firstRunSettings) => new MultiMcLibrarySettingsView();
     }
-
-    public readonly record struct GroupedInstance(string? Group, string FolderName);
 }

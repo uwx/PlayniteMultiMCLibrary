@@ -58,12 +58,13 @@
     <Compile Include="HSNXT.Linq.Expressions\FluentExtensions.Additions.cs" />
     <Compile Include="HSNXT.Linq.Expressions\FluentExtensions.cs" />
     <Compile Include="JsonTypes.cs" />
+    <Compile Include="MultiMcMetadataProvider.cs" />
     <Compile Include="NetFxCompat.cs" />
-    <Compile Include="MultiMCLibraryClient.cs" />
-    <Compile Include="MultiMCLibrary.cs" />
-    <Compile Include="MultiMCLibrarySettings.cs" />
-    <Compile Include="MultiMCLibrarySettingsView.xaml.cs">
-      <DependentUpon>MultiMCLibrarySettingsView.xaml</DependentUpon>
+    <Compile Include="MultiMcLibraryClient.cs" />
+    <Compile Include="MultiMcLibrary.cs" />
+    <Compile Include="MultiMcLibrarySettings.cs" />
+    <Compile Include="MultiMcLibrarySettingsView.xaml.cs">
+      <DependentUpon>MultiMcLibrarySettingsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TokenFormatter.cs" />
@@ -79,7 +80,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="MultiMCLibrarySettingsView.xaml">
+    <Page Include="MultiMcLibrarySettingsView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -90,6 +91,75 @@
     <PackageReference Include="PlayniteSDK" Version="6.1.0" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="backgrounds\1.11.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\1.12.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\1.13.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\1.14.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\1.15.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\1.16.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\1.17.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\1.18.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\1.9.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\logo1.13.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\logo1.14.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\logo1.16.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="backgrounds\logo1.17.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="covers\1.12.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="covers\1.13.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="covers\1.13withlogo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="covers\1.14.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="covers\1.14withlogo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="covers\1.15.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="covers\1.15withlogo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="covers\1.16.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="covers\1.17.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="covers\credit.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="icons\bee.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -6,9 +6,9 @@
              xmlns:proj="clr-namespace:MultiMcLibrary"
              mc:Ignorable="d"
              d:DesignHeight="400" d:DesignWidth="600" d:DataContext="{d:DesignInstance proj:MultiMcLibrarySettingsViewModel}">
-    <StackPanel>
+    <StackPanel Margin="15">
         <TextBlock Text="Path to MultiMC folder:"/>
-        <TextBox Text="{Binding Settings.MultiMcFolder}"/>
+        <TextBox Text="{Binding Settings.MultiMcPath}"/>
         <TextBlock Text="Instance name display formatting:" Padding="0,15,0,0"/>
         <TextBox Text="{Binding Settings.InstanceNameFormat}"/>
         <TextBlock Padding="0,0,0,15">
@@ -17,5 +17,7 @@
         </TextBlock>
         <CheckBox IsChecked="{Binding Settings.UpdatePlaytimeOnClose}" Content="Update playtime when Minecraft is closed"></CheckBox>
         <CheckBox IsChecked="{Binding Settings.UpdateDescriptionOnClose}" Content="Update description when version or modlist change"></CheckBox>
+        <CheckBox IsChecked="{Binding Settings.UseVersionCovers}" Content="Use built-in per-version covers, if available"></CheckBox>
+        <CheckBox IsChecked="{Binding Settings.UseVersionBackgrounds}" Content="Use built-in per-version backgrounds, if available"></CheckBox>
     </StackPanel>
 </UserControl>
