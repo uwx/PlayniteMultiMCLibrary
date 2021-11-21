@@ -67,8 +67,8 @@ namespace MultiMcLibrary
                 Path.Combine(MultiMcLibrary.AssemblyPath, $"icons/{instanceCfg.IconKey}.png"),
             };
             
-            Logger.Info(Path.Combine(_library.MultiMcPath, $"icons/{instanceCfg.IconKey}.png"));
-            Logger.Info(Path.Combine(MultiMcLibrary.AssemblyPath, $"icons/{instanceCfg.IconKey}.png"));
+            // Logger.Info(Path.Combine(_library.MultiMcPath, $"icons/{instanceCfg.IconKey}.png"));
+            // Logger.Info(Path.Combine(MultiMcLibrary.AssemblyPath, $"icons/{instanceCfg.IconKey}.png"));
 
             var foundPath = pathOptions.FirstOrDefault(File.Exists);
             return foundPath != null ? new MetadataFile(foundPath) : null;
