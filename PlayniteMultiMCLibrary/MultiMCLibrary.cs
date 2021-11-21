@@ -76,7 +76,7 @@ namespace MultiMcLibrary
         public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
             => args.Games.All(e => e.PluginId != Id) ? Array.Empty<GameMenuItem>() : _gameMenuItems;
 
-        internal void SettingsChanged(MultiMcLibrarySettings before, MultiMcLibrarySettings after)
+        internal void SettingsChanged(MultiMcLibrarySettings before, MultiMcLibrarySettings after) // Untested
         {
             // Update game actions when MultiMC folder path changes
             if (before.MultiMcPath != after.MultiMcPath)
@@ -115,7 +115,7 @@ namespace MultiMcLibrary
             }
         }
 
-        public override void OnGameStopped(OnGameStoppedEventArgs args)
+        public override void OnGameStopped(OnGameStoppedEventArgs args) // Untested
         {
             if (args.Game.PluginId != Id)
             {
@@ -131,7 +131,7 @@ namespace MultiMcLibrary
             PlayniteApi.Database.Games.Update(args.Game);
         }
 
-        public void OnClientClosed()
+        public void OnClientClosed() // Untested
         {
             if (!Settings.UpdatePlaytimeOnClose && !Settings.UpdateDescriptionOnClose)
             {
