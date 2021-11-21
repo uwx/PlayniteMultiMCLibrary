@@ -78,7 +78,7 @@ namespace MultiMcLibrary
 
         internal void SettingsChanged(MultiMcLibrarySettings before, MultiMcLibrarySettings after) // Untested
         {
-            // Update game actions when MultiMC folder path changes
+            // Update game actions and install folder when MultiMC folder path changes
             if (before.MultiMcPath != after.MultiMcPath)
             {
                 PlayniteApi.Database.Games.BeginBufferUpdate();
@@ -90,19 +90,50 @@ namespace MultiMcLibrary
                     }
 
                     var changed = false;
+                    var instanceFolder = Path.Combine(MultiMcPath, "instances", GetFolderName(game));
+                    if (game.InstallDirectory != instanceFolder)
+                    {
+                        game.InstallDirectory = instanceFolder;
+                        changed = true;
+                    }
+                    
                     for (var i = 0; i < game.GameActions.Count; i++)
                     {
                         var gameAction = game.GameActions[i];
-                        if (gameAction.Name == "Launch MultiMC" && gameAction.Path.EndsWith("MultiMC.exe"))
+                        switch (gameAction.Name)
                         {
-                            game.GameActions[i] = new GameAction
-                            {
-                                Type = GameActionType.File,
-                                Path = Path.Combine(MultiMcPath, "MultiMC.exe"),
-                                WorkingDir = MultiMcPath,
-                                Name = "Launch MultiMC",
-                            };
-                            changed = true;
+                            case "Launch MultiMC":
+                                game.GameActions[i] = new GameAction
+                                {
+                                    Type = GameActionType.File,
+                                    Path = Path.Combine(MultiMcPath, "MultiMC.exe"),
+                                    WorkingDir = MultiMcPath,
+                                    Name = "Launch MultiMC",
+                                };
+                                changed = true;
+                                break;
+                            case "Open Minecraft Folder":
+                                game.GameActions[i] = new GameAction
+                                {
+                                    Type = GameActionType.File,
+                                    Path = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "explorer.exe"),
+                                    Arguments = $@"""{Path.Combine(instanceFolder, ".minecraft")}""",
+                                    WorkingDir = MultiMcPath,
+                                    Name = "Open Minecraft Folder",
+                                };
+                                changed = true;
+                                break;
+                            case "Open Mods Folder":
+                                game.GameActions[i] = new GameAction
+                                {
+                                    Type = GameActionType.File,
+                                    Path = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "explorer.exe"),
+                                    Arguments = $@"""{Path.Combine(instanceFolder, ".minecraft", "mods")}""",
+                                    WorkingDir = MultiMcPath,
+                                    Name = "Open Mods Folder",
+                                };
+                                changed = true;
+                                break;
                         }
                     }
 
@@ -243,6 +274,22 @@ namespace MultiMcLibrary
                             Path = Path.Combine(MultiMcPath, "MultiMC.exe"),
                             WorkingDir = MultiMcPath,
                             Name = "Launch MultiMC",
+                        },
+                        new()
+                        {
+                            Type = GameActionType.File,
+                            Path = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "explorer.exe"),
+                            Arguments = $@"""{Path.Combine(instanceFolder, ".minecraft")}""",
+                            WorkingDir = MultiMcPath,
+                            Name = "Open Minecraft Folder",
+                        },
+                        new()
+                        {
+                            Type = GameActionType.File,
+                            Path = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "explorer.exe"),
+                            Arguments = $@"""{Path.Combine(instanceFolder, ".minecraft", "mods")}""",
+                            WorkingDir = MultiMcPath,
+                            Name = "Open Mods Folder",
                         }
                     },
                 };
