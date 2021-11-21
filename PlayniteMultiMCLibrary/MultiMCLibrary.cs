@@ -76,7 +76,7 @@ namespace MultiMcLibrary
         public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
             => args.Games.All(e => e.PluginId != Id) ? Array.Empty<GameMenuItem>() : _gameMenuItems;
 
-        internal void SettingsChanged(MultiMcLibrarySettings before, MultiMcLibrarySettings after) // Untested
+        internal void SettingsChanged(MultiMcLibrarySettings before, MultiMcLibrarySettings after)
         {
             // Update game actions and install folder when MultiMC folder path changes
             if (before.MultiMcPath != after.MultiMcPath)
@@ -275,7 +275,7 @@ namespace MultiMcLibrary
                             WorkingDir = MultiMcPath,
                             Name = "Launch MultiMC",
                         },
-                        new()
+                        new() // Untested
                         {
                             Type = GameActionType.File,
                             Path = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "explorer.exe"),
@@ -283,7 +283,7 @@ namespace MultiMcLibrary
                             WorkingDir = MultiMcPath,
                             Name = "Open Minecraft Folder",
                         },
-                        new()
+                        new() // Untested
                         {
                             Type = GameActionType.File,
                             Path = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "explorer.exe"),
