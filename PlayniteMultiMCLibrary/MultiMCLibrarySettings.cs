@@ -12,7 +12,9 @@ namespace MultiMcLibrary
         private bool _updatePlaytimeOnClose = true;
         private bool _updateDescriptionOnClose = true;
         private bool _useVersionCovers = true;
+        private bool _useDefaultCover = true;
         private bool _useVersionBackgrounds = true;
+        private bool _useDefaultBackground = true;
 
         [JsonProperty("MultiMcFolder")]
         public string MultiMcPath { get => _multiMcPath; set => SetValue(ref _multiMcPath, value); }
@@ -20,7 +22,9 @@ namespace MultiMcLibrary
         public bool UpdatePlaytimeOnClose { get => _updatePlaytimeOnClose; set => SetValue(ref _updatePlaytimeOnClose, value); }
         public bool UpdateDescriptionOnClose { get => _updateDescriptionOnClose; set => SetValue(ref _updateDescriptionOnClose, value); }
         public bool UseVersionCovers { get => _useVersionCovers; set => SetValue(ref _useVersionCovers, value); }
+        public bool UseDefaultCover { get => _useDefaultCover; set => SetValue(ref _useDefaultCover, value); }
         public bool UseVersionBackgrounds { get => _useVersionBackgrounds; set => SetValue(ref _useVersionBackgrounds, value); }
+        public bool UseDefaultBackground { get => _useDefaultBackground; set => SetValue(ref _useDefaultBackground, value); }
     }
 
     public class MultiMcLibrarySettingsViewModel : ObservableObject, ISettings

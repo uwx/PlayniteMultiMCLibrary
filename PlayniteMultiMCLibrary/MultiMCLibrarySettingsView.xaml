@@ -15,9 +15,11 @@
             Valid tokens:
             <Run Text="{Binding CommaSeparatedValidTokens, Mode=OneWay}"></Run>
         </TextBlock>
-        <CheckBox IsChecked="{Binding Settings.UpdatePlaytimeOnClose}" Content="Update playtime when Minecraft is closed"></CheckBox>
-        <CheckBox IsChecked="{Binding Settings.UpdateDescriptionOnClose}" Content="Update description when version or modlist change"></CheckBox>
-        <CheckBox IsChecked="{Binding Settings.UseVersionCovers}" Content="Use built-in per-version covers, if available"></CheckBox>
-        <CheckBox IsChecked="{Binding Settings.UseVersionBackgrounds}" Content="Use built-in per-version backgrounds, if available"></CheckBox>
+        <CheckBox Margin="0,5" IsChecked="{Binding Settings.UpdatePlaytimeOnClose}" Content="Update playtime when Minecraft is closed"></CheckBox>
+        <CheckBox Margin="0,5" IsChecked="{Binding Settings.UpdateDescriptionOnClose}" Content="Update description when version or modlist change"></CheckBox>
+        <CheckBox Margin="0,5" IsChecked="{Binding Settings.UseVersionCovers}" Content="Use built-in per-version covers, if available"></CheckBox>
+        <CheckBox Margin="15,5" IsChecked="{Binding Settings.UseDefaultCover}" Content="Use default cover if per-version cover isn't available"></CheckBox>
+        <CheckBox Margin="0,5" IsChecked="{Binding Settings.UseVersionBackgrounds}" Content="Use built-in per-version backgrounds, if available"></CheckBox>
+        <CheckBox Margin="15,5" IsChecked="{Binding Settings.UseDefaultBackground}" Content="Use default background if per-version background isn't available"></CheckBox>
     </StackPanel>
 </UserControl>

@@ -34,6 +34,9 @@ namespace MultiMcLibrary
             select (version: new Version(match.Groups[1].Value), file)
         ).ToDictionary(e => e.version, e => e.file);
 
+        private static readonly string DefaultCover = Path.Combine(MultiMcLibrary.AssemblyPath, "covers/default.png");
+        private static readonly string DefaultBackground = Path.Combine(MultiMcLibrary.AssemblyPath, "backgrounds/default.png");
+
         public MultiMcMetadataProvider(MultiMcLibrary library)
         {
             _library = library;
@@ -46,17 +49,32 @@ namespace MultiMcLibrary
                 return new GameMetadata();
             }
 
-            return new GameMetadata
+            // ReSharper disable once UseObjectOrCollectionInitializer
+            var metadata = new GameMetadata();
+            metadata.Description = DescriptionFormatter.FormatDescription(instanceFolder, cfg, pack);
+            metadata.Icon = GetValidIcon(cfg);
+
+            var gameVersion = pack.GetComponentById("net.minecraft")?.Version;
+
+            if (_library.Settings.UseVersionCovers && GetPluginCover(gameVersion) is { } existingCover)
             {
-                Description = DescriptionFormatter.FormatDescription(instanceFolder, cfg, pack),
-                Icon = GetValidIcon(cfg),
-                CoverImage = _library.Settings.UseVersionCovers
-                    ? GetPluginCover(pack.GetComponentById("net.minecraft")?.Version)
-                    : null,
-                BackgroundImage = _library.Settings.UseVersionBackgrounds
-                    ? GetPluginBackground(pack.GetComponentById("net.minecraft")?.Version)
-                    : null,
-            };
+                metadata.CoverImage = existingCover;
+            }
+            else if (_library.Settings.UseDefaultCover)
+            {
+                metadata.CoverImage = new MetadataFile(DefaultCover);
+            }
+
+            if (_library.Settings.UseVersionBackgrounds && GetPluginBackground(gameVersion) is { } existingBackground)
+            {
+                metadata.BackgroundImage = existingBackground;
+            }
+            else if (_library.Settings.UseDefaultBackground)
+            {
+                metadata.BackgroundImage = new MetadataFile(DefaultBackground);
+            }
+
+            return metadata;
         }
 
         private MetadataFile? GetValidIcon(InstanceCfg instanceCfg)
