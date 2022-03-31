@@ -78,6 +78,8 @@ public class MultiMcLibrary : LibraryPlugin
 
     internal void SettingsChanged(MultiMcLibrarySettings before, MultiMcLibrarySettings after)
     {
+        var instancesFolder = GetInstancesFolder();
+
         // Update game actions and install folder when MultiMC folder path changes
         if (before.MultiMcPath != after.MultiMcPath)
         {
@@ -90,7 +92,7 @@ public class MultiMcLibrary : LibraryPlugin
                 }
 
                 var changed = false;
-                var instanceFolder = Path.Combine(MultiMcPath, "instances", GetFolderName(game));
+                var instanceFolder = Path.Combine(instancesFolder, GetFolderName(game));
                 if (game.InstallDirectory != instanceFolder)
                 {
                     game.InstallDirectory = instanceFolder;
@@ -185,7 +187,9 @@ public class MultiMcLibrary : LibraryPlugin
 
     internal bool TryGetInstanceInfo(string instanceFolderName, [NotNullWhen(true)] out InstanceCfg? cfg, [NotNullWhen(true)] out MultiMcPack? pack, [NotNullWhen(true)] out string? instanceFolder)
     {
-        instanceFolder = Path.Combine(MultiMcPath, "instances", instanceFolderName);
+        var instancesFolder = GetInstancesFolder();
+
+        instanceFolder = Path.Combine(instancesFolder, instanceFolderName);
 
         var cfgPath = Path.Combine(instanceFolder, "instance.cfg");
         var packPath = Path.Combine(instanceFolder, "mmc-pack.json");
@@ -197,10 +201,23 @@ public class MultiMcLibrary : LibraryPlugin
             return false;
         }
 
-        cfg = InstanceCfgParser.Parse(File.ReadAllLines(cfgPath));
+        cfg = LoadCfgFile<InstanceCfg>(cfgPath);
         pack = JsonConvert.DeserializeObject<MultiMcPack>(File.ReadAllText(packPath));
 
         return pack != null;
+    }
+
+    private string GetInstancesFolder()
+    {
+        // Currently this file is read once for every game, so that you don't need to restart Playnite if the config
+        // changes. Could use something more sophisticated in the future.
+        var multimcCfgPath = Path.Combine(MultiMcPath, "multimc.cfg");
+        return Path.GetFullPath(Path.Combine(MultiMcPath, LoadCfgFile<MultiMcCfg>(multimcCfgPath).InstanceDir));
+    }
+
+    private static T LoadCfgFile<T>(string cfgPath) where T : class, new()
+    {
+        return CfgParser.Parse<T>(File.ReadAllLines(cfgPath));
     }
 
     internal bool TryGetInstanceInfo(Game game, [NotNullWhen(true)] out InstanceCfg? cfg, [NotNullWhen(true)] out MultiMcPack? pack, [NotNullWhen(true)] out string? instanceFolder)
@@ -299,14 +316,16 @@ public class MultiMcLibrary : LibraryPlugin
     private readonly record struct GroupedInstance(string? Group, string FolderName);
     private IEnumerable<GroupedInstance> GetInstancesWithGroups()
     {
-        if (!Directory.Exists(Path.Combine(MultiMcPath, "instances")))
+        var instancesFolder = GetInstancesFolder();
+        
+        if (!Directory.Exists(instancesFolder))
         {
             return Array.Empty<GroupedInstance>();
         }
 
         var instanceList = new Dictionary<string, GroupedInstance>();
 
-        var instgroupsPath = Path.Combine(MultiMcPath, "instances/instgroups.json");
+        var instgroupsPath = Path.Combine(instancesFolder, "instgroups.json");
 
         if (File.Exists(instgroupsPath))
         {
@@ -321,7 +340,7 @@ public class MultiMcLibrary : LibraryPlugin
             }
         }
             
-        foreach (var instanceFolder in Directory.EnumerateDirectories(Path.Combine(MultiMcPath, "instances")))
+        foreach (var instanceFolder in Directory.EnumerateDirectories(instancesFolder))
         {
             var instanceFolderName = Path.GetFileName(instanceFolder);
             if (!instanceList.ContainsKey(instanceFolderName))

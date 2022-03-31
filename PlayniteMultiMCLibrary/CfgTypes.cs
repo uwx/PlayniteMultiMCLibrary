@@ -6,6 +6,76 @@ namespace MultiMcLibrary;
 /// <summary>
 /// Sample:
 /// <code>
+/// Analytics=false
+/// AnalyticsClientID=aaa
+/// AnalyticsSeen=2
+/// ApplicationTheme=dark
+/// AutoCloseConsole=false
+/// AutoUpdate=true
+/// CentralModsDir=mods
+/// ConsoleFont=Courier
+/// ConsoleFontSize=10
+/// ConsoleMaxLines=100000
+/// ConsoleOverflowStop=true
+/// ConsoleWindowGeometry=aaa
+/// ConsoleWindowState=aaa
+/// IconTheme=pe_colored
+/// IconsDir=icons
+/// InstSortMode=Name
+/// InstanceDir=instances
+/// JProfilerPath=
+/// JVisualVMPath=
+/// JavaArchitecture=64
+/// JavaPath=C:/SSDPrograms/GraalVM CE J8 20.2.0/bin/javaw.exe
+/// JavaTimestamp=1597578006000
+/// JavaVersion=1.8.0_262
+/// JsonEditor=
+/// JvmArgs=
+/// Language=en_US
+/// LastHostname=aaa
+/// LastUsedGroupForNewInstance=Forge
+/// LaunchMaximized=false
+/// MCEditPath=
+/// MainWindowGeometry=aaa
+/// MainWindowState=aaa
+/// MaxMemAlloc=8192
+/// MinMemAlloc=1024
+/// MinecraftWinHeight=480
+/// MinecraftWinWidth=854
+/// NewInstanceGeometry=aaa
+/// PagedGeometry=aaa
+/// PasteEEAPIKey=multimc
+/// PermGen=128
+/// PostExitCommand=
+/// PreLaunchCommand=
+/// ProxyAddr=127.0.0.1
+/// ProxyPass=
+/// ProxyPort=8080
+/// ProxyType=None
+/// ProxyUser=
+/// RecordGameTime=true
+/// SelectedInstance=
+/// ShowConsole=false
+/// ShowConsoleOnError=true
+/// ShowGameTime=true
+/// ShowGlobalGameTime=true
+/// ShownNotifications=
+/// UpdateChannel=develop
+/// UpdateDialogGeometry=aaa
+/// UseNativeGLFW=false
+/// UseNativeOpenAL=false
+/// WrapperCommand=
+/// </code>
+/// </summary>
+[UsedImplicitly]
+public class MultiMcCfg
+{
+    [CfgProperty("InstanceDir")] public string InstanceDir { get; set; } = "instances";
+}
+
+/// <summary>
+/// Sample:
+/// <code>
 /// ForgeVersion=
 /// InstanceType=OneSix
 /// IntendedVersion=
@@ -72,16 +142,6 @@ public class InstanceCfg
     public DateTime? LastLaunchDateTime => LastLaunchTime != null
         ? DateTimeOffset.FromUnixTimeMilliseconds((long)LastLaunchTime).UtcDateTime
         : null;
-}
-
-public class CfgPropertyAttribute : Attribute
-{
-    public string PropertyName { get; }
-
-    public CfgPropertyAttribute(string propertyName)
-    {
-        PropertyName = propertyName;
-    }
 }
 
 [PublicAPI]
