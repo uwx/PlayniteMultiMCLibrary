@@ -65,7 +65,7 @@ public static class CfgParser
         {
             var dict = new Dictionary<string, (PropertyInfo, Setter)>();
             
-            foreach (var prop in typeof(InstanceCfg).GetProperties().Where(e => e.GetCustomAttribute<CfgPropertyAttribute>() != null))
+            foreach (var prop in typeof(T).GetProperties().Where(e => e.GetCustomAttribute<CfgPropertyAttribute>() != null))
             {
                 dict[prop.GetCustomAttribute<CfgPropertyAttribute>().PropertyName] = (prop, ReflectionUtils.SetMemberInstance(prop));
             }
