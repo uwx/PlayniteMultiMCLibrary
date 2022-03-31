@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Pack .pext" type="RunExe" factoryName=".NET Executable">
     <option name="EXE_PATH" value="$USER_HOME$/AppData/Local/Playnite/Toolbox.exe" />
-    <option name="PROGRAM_PARAMETERS" value="pack &quot;bin\Release&quot; &quot;Packed&quot;" />
+    <option name="PROGRAM_PARAMETERS" value="pack &quot;bin\Release\net48&quot; &quot;Packed&quot;" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/PlayniteMultiMCLibrary/" />
     <option name="PASS_PARENT_ENVS" value="1" />
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
