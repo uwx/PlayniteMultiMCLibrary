@@ -31,62 +31,61 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace Mono.Linq.Expressions
+namespace Mono.Linq.Expressions;
+
+public static class CombineExtensions
 {
-    public static class CombineExtensions
+    public static Expression<T> Combine<[DelegateConstraint] T>(this Expression<T> self,
+        Func<Expression, Expression> combinator) where T : class
     {
-        public static Expression<T> Combine<[DelegateConstraint] T>(this Expression<T> self,
-            Func<Expression, Expression> combinator) where T : class
-        {
-            if (self == null)
-                throw new ArgumentNullException(nameof(self));
-            if (combinator == null)
-                throw new ArgumentNullException(nameof(combinator));
+        if (self == null)
+            throw new ArgumentNullException(nameof(self));
+        if (combinator == null)
+            throw new ArgumentNullException(nameof(combinator));
 
-            var parameters = ParametersFor(self);
+        var parameters = ParametersFor(self);
 
-            return Expression.Lambda<T>(combinator(RewriteBody(self, parameters)), parameters);
-        }
+        return Expression.Lambda<T>(combinator(RewriteBody(self, parameters)), parameters);
+    }
 
-        public static Expression<T> Combine<[DelegateConstraint] T>(this Expression<T> self, Expression<T> expression,
-            Func<Expression, Expression, Expression> combinator) where T : class
-        {
-            if (self == null)
-                throw new ArgumentNullException(nameof(self));
-            if (expression == null)
-                throw new ArgumentNullException(nameof(expression));
-            if (combinator == null)
-                throw new ArgumentNullException(nameof(combinator));
+    public static Expression<T> Combine<[DelegateConstraint] T>(this Expression<T> self, Expression<T> expression,
+        Func<Expression, Expression, Expression> combinator) where T : class
+    {
+        if (self == null)
+            throw new ArgumentNullException(nameof(self));
+        if (expression == null)
+            throw new ArgumentNullException(nameof(expression));
+        if (combinator == null)
+            throw new ArgumentNullException(nameof(combinator));
 
-            var parameters = ParametersFor(self);
+        var parameters = ParametersFor(self);
 
-            return Expression.Lambda<T>(combinator(RewriteBody(self, parameters), RewriteBody(expression, parameters)),
-                parameters);
-        }
+        return Expression.Lambda<T>(combinator(RewriteBody(self, parameters), RewriteBody(expression, parameters)),
+            parameters);
+    }
 
-        private static ParameterExpression[] ParametersFor(LambdaExpression lambda)
-        {
-            return lambda.Parameters.Select(p => Expression.Parameter(p.Type, p.Name)).ToArray();
-        }
+    private static ParameterExpression[] ParametersFor(LambdaExpression lambda)
+    {
+        return lambda.Parameters.Select(p => Expression.Parameter(p.Type, p.Name)).ToArray();
+    }
 
-        private static Expression RewriteBody(LambdaExpression expression, IEnumerable<ParameterExpression> parameters)
-            => new ParameterRewriter(expression.Parameters, parameters).Visit(expression.Body);
+    private static Expression RewriteBody(LambdaExpression expression, IEnumerable<ParameterExpression> parameters)
+        => new ParameterRewriter(expression.Parameters, parameters).Visit(expression.Body);
 
-        private class ParameterRewriter : ExpressionVisitor
-        {
-            private readonly IDictionary<ParameterExpression, ParameterExpression> _parameterMapping;
+    private class ParameterRewriter : ExpressionVisitor
+    {
+        private readonly IDictionary<ParameterExpression, ParameterExpression> _parameterMapping;
 
-            public ParameterRewriter(IEnumerable<ParameterExpression> candidates,
-                IEnumerable<ParameterExpression> replacements)
-                => _parameterMapping = ParametersMappingFor(candidates, replacements);
+        public ParameterRewriter(IEnumerable<ParameterExpression> candidates,
+            IEnumerable<ParameterExpression> replacements)
+            => _parameterMapping = ParametersMappingFor(candidates, replacements);
 
-            private static IDictionary<ParameterExpression, ParameterExpression> ParametersMappingFor(
-                IEnumerable<ParameterExpression> candidates, IEnumerable<ParameterExpression> replacements)
-                => candidates.Zip(replacements, (candidate, replacement) => new {candidate, replacement})
-                    .ToDictionary(t => t.candidate, t => t.replacement);
+        private static IDictionary<ParameterExpression, ParameterExpression> ParametersMappingFor(
+            IEnumerable<ParameterExpression> candidates, IEnumerable<ParameterExpression> replacements)
+            => candidates.Zip(replacements, (candidate, replacement) => new {candidate, replacement})
+                .ToDictionary(t => t.candidate, t => t.replacement);
 
-            protected override Expression VisitParameter(ParameterExpression expression) 
-                => _parameterMapping.TryGetValue(expression, out var replacement) ? replacement : expression;
-        }
+        protected override Expression VisitParameter(ParameterExpression expression) 
+            => _parameterMapping.TryGetValue(expression, out var replacement) ? replacement : expression;
     }
 }

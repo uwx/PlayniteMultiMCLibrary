@@ -13,13 +13,12 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace MultiMcLibrary
+namespace MultiMcLibrary;
+
+public partial class MultiMcLibrarySettingsView : UserControl
 {
-    public partial class MultiMcLibrarySettingsView : UserControl
+    public MultiMcLibrarySettingsView()
     {
-        public MultiMcLibrarySettingsView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

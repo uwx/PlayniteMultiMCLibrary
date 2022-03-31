@@ -29,16 +29,15 @@
 using System;
 using System.Linq.Expressions;
 
-namespace Mono.Linq.Expressions
-{
-    public static class ExpressionExtensions
-    {
-        public static bool Is(this Expression self, ExpressionType type)
-        {
-            if (self == null)
-                throw new ArgumentNullException(nameof(self));
+namespace Mono.Linq.Expressions;
 
-            return self.NodeType == type;
-        }
+public static class ExpressionExtensions
+{
+    public static bool Is(this Expression self, ExpressionType type)
+    {
+        if (self == null)
+            throw new ArgumentNullException(nameof(self));
+
+        return self.NodeType == type;
     }
 }
