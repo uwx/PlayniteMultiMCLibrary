@@ -26,7 +26,7 @@ internal static class ReflectionUtils
     {
         var type = prop.DeclaringType!;
 
-        var instance = Parameter(type, "instance");
+        var instance = Parameter(typeof(object), "instance");
         var value = Parameter(typeof(object), "value");
 
         var convertToType = prop.PropertyType.IsValueType
