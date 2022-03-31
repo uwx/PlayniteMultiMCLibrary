@@ -1,0 +1,8 @@
+AddonId: MultiMClibrary_6ab2531e-4800-404b-a938-4421b28a9f3e
+Packages:
+  - Version: 1.1
+    RequiredApiVersion: 6.1.0
+    ReleaseDate: 2022-03-10
+    PackageUrl: https://github.com/uwx/PlayniteMultiMCLibrary/blob/master/PlayniteMultiMCLibrary/Packed/MultiMClibrary_6ab2531e-4800-404b-a938-4421b28a9f3e_1_1.pext?raw=true
+    Changelog:
+      - Initial Playnite extensions repo release
