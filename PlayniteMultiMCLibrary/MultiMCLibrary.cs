@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Controls;
 using Newtonsoft.Json;
 using Playnite.SDK;
@@ -12,6 +11,57 @@ using Playnite.SDK.Models;
 using Playnite.SDK.Plugins;
 
 namespace MultiMcLibrary;
+
+public abstract class BaseLauncher
+{
+    /// <summary>
+    /// Path to the client installation
+    /// </summary>
+    public string InstallDirectory { get; }
+
+    /// <summary>
+    /// Display name of the client
+    /// </summary>
+    public abstract string Name { get; }
+
+    public abstract string ExecutablePath { get; }
+    public abstract string ConfigPath { get; }
+    public abstract string ProcessName { get; }
+    public abstract string IconName { get; }
+
+    protected BaseLauncher(string installDirectory)
+    {
+        InstallDirectory = installDirectory;
+    }
+}
+
+public class MultiMcLauncher : BaseLauncher
+{
+    public override string Name => "MultiMC";
+    public static string RelativeExecutablePath => "MultiMC.exe";
+    public override string ExecutablePath => Path.Combine(InstallDirectory, RelativeExecutablePath);
+    public override string ConfigPath => Path.Combine(InstallDirectory, "multimc.cfg");
+    public override string ProcessName => "MultiMC Launcher";
+    public override string IconName => "icon-multimc.png";
+
+    public MultiMcLauncher(string installDirectory) : base(installDirectory)
+    {
+    }
+}
+
+public class PolyMcLauncher : BaseLauncher
+{
+    public override string Name => "PolyMC";
+    public static string RelativeExecutablePath => "polymc.exe";
+    public override string ExecutablePath => Path.Combine(InstallDirectory, RelativeExecutablePath);
+    public override string ConfigPath => Path.Combine(InstallDirectory, "polymc.cfg");
+    public override string ProcessName => "PolyMC";
+    public override string IconName => "icon-polymc.png";
+
+    public PolyMcLauncher(string installDirectory) : base(installDirectory)
+    {
+    }
+}
 
 public class MultiMcLibrary : LibraryPlugin
 {
@@ -24,18 +74,20 @@ public class MultiMcLibrary : LibraryPlugin
 
     public override Guid Id { get; } = Guid.Parse("6ab2531e-4800-404b-a938-4421b28a9f3e");
 
-    public override string Name => "MultiMC";
+    public override string Name => "MultiMC/PolyMC";
 
     // Implementing Client adds ability to open it via special menu in playnite.
     public override LibraryClient Client { get; }
 
-    public string MultiMcPath => Settings.MultiMcPath;
+    public BaseLauncher? Launcher { get; private set; }
 
     private readonly GameMenuItem[] _gameMenuItems;
 
     public MultiMcLibrary(IPlayniteAPI api) : base(api)
     {
         SettingsViewModel = new MultiMcLibrarySettingsViewModel(this);
+        DetectMultiMcClient();
+
         Properties = new LibraryPluginProperties
         {
             HasSettings = true
@@ -73,16 +125,42 @@ public class MultiMcLibrary : LibraryPlugin
         };
     }
 
+    private void DetectMultiMcClient()
+    {
+        var rootFolder = Settings.MultiMcPath;
+
+        if (File.Exists(Path.Combine(rootFolder, MultiMcLauncher.RelativeExecutablePath)))
+        {
+            Launcher = new MultiMcLauncher(rootFolder);
+        }
+        else if (File.Exists(Path.Combine(rootFolder, PolyMcLauncher.RelativeExecutablePath)))
+        {
+            Launcher = new PolyMcLauncher(rootFolder);
+        }
+        else
+        {
+            Launcher = null;
+        }
+    }
+
     public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
         => args.Games.All(e => e.PluginId != Id) ? Array.Empty<GameMenuItem>() : _gameMenuItems;
 
     internal void SettingsChanged(MultiMcLibrarySettings before, MultiMcLibrarySettings after)
     {
-        var instancesFolder = GetInstancesFolder();
-
         // Update game actions and install folder when MultiMC folder path changes
         if (before.MultiMcPath != after.MultiMcPath)
         {
+            DetectMultiMcClient();
+
+            if (Launcher == null)
+            {
+                DisplayLauncherError();
+                return;
+            }
+        
+            var instancesFolder = GetInstancesFolder();
+
             PlayniteApi.Database.Games.BeginBufferUpdate();
             foreach (var game in PlayniteApi.Database.Games)
             {
@@ -108,9 +186,9 @@ public class MultiMcLibrary : LibraryPlugin
                             game.GameActions[i] = new GameAction
                             {
                                 Type = GameActionType.File,
-                                Path = Path.Combine(MultiMcPath, "MultiMC.exe"),
-                                WorkingDir = MultiMcPath,
-                                Name = "Launch MultiMC",
+                                Path = Launcher.ExecutablePath,
+                                WorkingDir = Launcher.InstallDirectory,
+                                Name = $"Launch {Launcher.Name}",
                             };
                             changed = true;
                             break;
@@ -120,7 +198,7 @@ public class MultiMcLibrary : LibraryPlugin
                                 Type = GameActionType.File,
                                 Path = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "explorer.exe"),
                                 Arguments = $@"""{Path.Combine(instanceFolder, ".minecraft")}""",
-                                WorkingDir = MultiMcPath,
+                                WorkingDir = Launcher.InstallDirectory,
                                 Name = "Open Minecraft Folder",
                             };
                             changed = true;
@@ -131,7 +209,7 @@ public class MultiMcLibrary : LibraryPlugin
                                 Type = GameActionType.File,
                                 Path = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "explorer.exe"),
                                 Arguments = $@"""{Path.Combine(instanceFolder, ".minecraft", "mods")}""",
-                                WorkingDir = MultiMcPath,
+                                WorkingDir = Launcher.InstallDirectory,
                                 Name = "Open Mods Folder",
                             };
                             changed = true;
@@ -146,6 +224,14 @@ public class MultiMcLibrary : LibraryPlugin
             }
             PlayniteApi.Database.Games.EndBufferUpdate();
         }
+    }
+
+    internal void DisplayLauncherError()
+    {
+        PlayniteApi.Dialogs.ShowErrorMessage(
+            $"The path to your MultiMC/PolyMC installation isn't valid:\n{Settings.MultiMcPath}",
+            "MultiMC Library Plugin Error"
+        );
     }
 
     public override void OnGameStopped(OnGameStoppedEventArgs args) // Untested
@@ -209,10 +295,15 @@ public class MultiMcLibrary : LibraryPlugin
 
     private string GetInstancesFolder()
     {
+        if (Launcher == null)
+        {
+            throw new InvalidOperationException("Launcher should not be null; this should not happen");
+        }
+        
         // Currently this file is read once for every game, so that you don't need to restart Playnite if the config
         // changes. Could use something more sophisticated in the future.
-        var multimcCfgPath = Path.Combine(MultiMcPath, "multimc.cfg");
-        return Path.GetFullPath(Path.Combine(MultiMcPath, LoadCfgFile<MultiMcCfg>(multimcCfgPath).InstanceDir));
+        var multimcCfgPath = Launcher.ConfigPath;
+        return Path.GetFullPath(Path.Combine(Launcher.InstallDirectory, LoadCfgFile<MultiMcCfg>(multimcCfgPath).InstanceDir));
     }
 
     private static T LoadCfgFile<T>(string cfgPath) where T : class, new()
@@ -255,11 +346,13 @@ public class MultiMcLibrary : LibraryPlugin
 
     public override IEnumerable<GameMetadata> GetGames(LibraryGetGamesArgs args)
     {
-        if (string.IsNullOrWhiteSpace(MultiMcPath))
+        // We don't show a message box here to avoid being obnoxious, instead one only is sent on plugin init and
+        // settings change
+        if (Launcher == null || string.IsNullOrWhiteSpace(Settings.MultiMcPath))
         {
             yield break;
         }
-            
+
         var instances = GetInstancesWithGroups();
         foreach (var instance in instances)
         {
@@ -288,8 +381,8 @@ public class MultiMcLibrary : LibraryPlugin
                     new()
                     {
                         Type = GameActionType.File,
-                        Path = Path.Combine(MultiMcPath, "MultiMC.exe"),
-                        WorkingDir = MultiMcPath,
+                        Path = Launcher.ExecutablePath,
+                        WorkingDir = Launcher.InstallDirectory,
                         Name = "Launch MultiMC",
                     },
                     new() // Untested
@@ -297,7 +390,7 @@ public class MultiMcLibrary : LibraryPlugin
                         Type = GameActionType.File,
                         Path = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "explorer.exe"),
                         Arguments = $@"""{Path.Combine(instanceFolder, ".minecraft")}""",
-                        WorkingDir = MultiMcPath,
+                        WorkingDir = Launcher.InstallDirectory,
                         Name = "Open Minecraft Folder",
                     },
                     new() // Untested
@@ -305,7 +398,7 @@ public class MultiMcLibrary : LibraryPlugin
                         Type = GameActionType.File,
                         Path = Path.Combine(Path.GetPathRoot(Environment.SystemDirectory), "explorer.exe"),
                         Arguments = $@"""{Path.Combine(instanceFolder, ".minecraft", "mods")}""",
-                        WorkingDir = MultiMcPath,
+                        WorkingDir = Launcher.InstallDirectory,
                         Name = "Open Mods Folder",
                     }
                 },
@@ -357,7 +450,7 @@ public class MultiMcLibrary : LibraryPlugin
 
     public override IEnumerable<PlayController> GetPlayActions(GetPlayActionsArgs args)
     {
-        if (args.Game.PluginId != Id)
+        if (args.Game.PluginId != Id || Launcher == null)
         {
             yield break;
         }
@@ -366,9 +459,9 @@ public class MultiMcLibrary : LibraryPlugin
         {
             Type = AutomaticPlayActionType.File,
             TrackingMode = TrackingMode.Process,
-            Path = Path.Combine(MultiMcPath, "MultiMC.exe"),
+            Path = Launcher.ExecutablePath,
             Arguments = @$"--launch ""{GetFolderName(args.Game)}""",
-            WorkingDir = MultiMcPath,
+            WorkingDir = Launcher.InstallDirectory,
             Name = "Play with MultiMC"
         };
     }

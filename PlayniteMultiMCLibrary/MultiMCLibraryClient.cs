@@ -14,15 +14,15 @@ public class MultiMcLibraryClient : LibraryClient
 {
     [DllImport("user32")]
     private static extern bool SetForegroundWindow(IntPtr hwnd);
-        
+
     private readonly MultiMcLibrary _multiMcLibrary;
 
-    private string MultiMcExe => Path.Combine(_multiMcLibrary.MultiMcPath, "MultiMC.exe");
-
     private bool? _cachedIsInstalled;
-    public override bool IsInstalled => _cachedIsInstalled ?? !string.IsNullOrWhiteSpace(_multiMcLibrary.MultiMcPath) && (_cachedIsInstalled = File.Exists(MultiMcExe)).Value;
+    public override bool IsInstalled
+        => _cachedIsInstalled ?? _multiMcLibrary.Launcher is { ExecutablePath: {} }
+            && (_cachedIsInstalled = File.Exists(_multiMcLibrary.Launcher.ExecutablePath)).Value;
 
-    public override string Icon { get; } = Path.Combine(MultiMcLibrary.AssemblyPath, "icon.png");
+    public override string Icon => Path.Combine(MultiMcLibrary.AssemblyPath, _multiMcLibrary.Launcher?.IconName ?? "icon-multimc.png");
 
     public MultiMcLibraryClient(MultiMcLibrary multiMcLibrary)
     {
@@ -31,20 +31,32 @@ public class MultiMcLibraryClient : LibraryClient
 
     public override void Open()
     {
-        var mainProc = Process.GetProcessesByName("MultiMC Launcher").FirstOrDefault();
+        if (_multiMcLibrary.Launcher == null)
+        {
+            _multiMcLibrary.DisplayLauncherError();
+            return;
+        }
+        
+        var mainProc = Process.GetProcessesByName(_multiMcLibrary.Launcher.ProcessName).FirstOrDefault();
         if (mainProc is { HasExited: false })
         {
             SetForegroundWindow(mainProc.MainWindowHandle);
         }
         else
         {
-            Process.Start(MultiMcExe);
+            Process.Start(_multiMcLibrary.Launcher.ExecutablePath);
         }
     }
 
     public override void Shutdown()
     {
-        var mainProc = Process.GetProcessesByName("MultiMC Launcher").FirstOrDefault();
+        if (_multiMcLibrary.Launcher == null)
+        {
+            _multiMcLibrary.DisplayLauncherError();
+            return;
+        }
+
+        var mainProc = Process.GetProcessesByName(_multiMcLibrary.Launcher.ProcessName).FirstOrDefault();
         if (mainProc is { HasExited: false })
         {
             mainProc.CloseMainWindow();
