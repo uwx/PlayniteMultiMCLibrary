@@ -4,7 +4,7 @@ Adds support for importing [MultiMC](https://multimc.org/) instances to [Playnit
 
 ## Installation
 
-[Download the .pext](https://github.com/uwx/PlayniteMultiMCLibrary/blob/master/PlayniteMultiMCLibrary/Packed/MultiMClibrary_6ab2531e-4800-404b-a938-4421b28a9f3e_1_2.pext?raw=true) and open it with Playnite.
+[Download the .pext](https://github.com/uwx/PlayniteMultiMCLibrary/blob/master/PlayniteMultiMCLibrary/Packed/MultiMClibrary_6ab2531e-4800-404b-a938-4421b28a9f3e_1_3.pext?raw=true) and open it with Playnite.
 
 You have to restart Playnite after installing the extension.
 
