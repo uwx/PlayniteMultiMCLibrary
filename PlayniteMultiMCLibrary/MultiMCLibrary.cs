@@ -24,10 +24,31 @@ public abstract class BaseLauncher
     /// </summary>
     public abstract string Name { get; }
 
+    /// <summary>
+    /// Path to MultiMC.exe or PolyMC.exe
+    /// </summary>
     public abstract string ExecutablePath { get; }
+
+    /// <summary>
+    /// Path to multimc.cfg or polymc.cfg
+    /// </summary>
     public abstract string ConfigPath { get; }
+
+    /// <summary>
+    /// Name of the running process for MultiMC or PolyMC
+    /// </summary>
     public abstract string ProcessName { get; }
+
+    /// <summary>
+    /// Relative path to the launcher icon from within the plugin directory
+    /// </summary>
     public abstract string IconName { get; }
+
+    /// <summary>
+    /// Directory where the config file is located; also the origin for the relative path to the instances folder
+    /// defined in the config.
+    /// </summary>
+    public abstract string DataDirectory { get; }
 
     protected BaseLauncher(string installDirectory)
     {
@@ -35,7 +56,7 @@ public abstract class BaseLauncher
     }
 }
 
-public class MultiMcLauncher : BaseLauncher
+public sealed class MultiMcLauncher : BaseLauncher
 {
     public override string Name => "MultiMC";
     public static string RelativeExecutablePath => "MultiMC.exe";
@@ -43,23 +64,29 @@ public class MultiMcLauncher : BaseLauncher
     public override string ConfigPath => Path.Combine(InstallDirectory, "multimc.cfg");
     public override string ProcessName => "MultiMC Launcher";
     public override string IconName => "icon-multimc.png";
+    public override string DataDirectory => InstallDirectory;
 
     public MultiMcLauncher(string installDirectory) : base(installDirectory)
     {
     }
 }
 
-public class PolyMcLauncher : BaseLauncher
+public sealed class PolyMcLauncher : BaseLauncher
 {
     public override string Name => "PolyMC";
     public static string RelativeExecutablePath => "polymc.exe";
     public override string ExecutablePath => Path.Combine(InstallDirectory, RelativeExecutablePath);
-    public override string ConfigPath => Path.Combine(InstallDirectory, "polymc.cfg");
+    public override string ConfigPath => Path.Combine(DataDirectory, "polymc.cfg");
     public override string ProcessName => "PolyMC";
     public override string IconName => "icon-polymc.png";
+    public override string DataDirectory { get; }
 
     public PolyMcLauncher(string installDirectory) : base(installDirectory)
     {
+        var isPortable = File.Exists(Path.Combine(installDirectory, "portable.txt"));
+        DataDirectory = isPortable
+            ? InstallDirectory
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PolyMC"); // TODO test as admin
     }
 }
 
@@ -86,7 +113,7 @@ public class MultiMcLibrary : LibraryPlugin
     public MultiMcLibrary(IPlayniteAPI api) : base(api)
     {
         SettingsViewModel = new MultiMcLibrarySettingsViewModel(this);
-        DetectMultiMcClient();
+        DetectLauncher();
 
         Properties = new LibraryPluginProperties
         {
@@ -125,7 +152,7 @@ public class MultiMcLibrary : LibraryPlugin
         };
     }
 
-    private void DetectMultiMcClient()
+    private void DetectLauncher()
     {
         var rootFolder = Settings.MultiMcPath;
 
@@ -143,6 +170,15 @@ public class MultiMcLibrary : LibraryPlugin
         }
     }
 
+    public void VerifySettings(List<string> errors)
+    {
+        DetectLauncher();
+        if (Launcher == null)
+        {
+            errors.Add($"The path to your MultiMC/PolyMC installation isn't valid:\n{Settings.MultiMcPath}");
+        }
+    }
+
     public override IEnumerable<GameMenuItem> GetGameMenuItems(GetGameMenuItemsArgs args)
         => args.Games.All(e => e.PluginId != Id) ? Array.Empty<GameMenuItem>() : _gameMenuItems;
 
@@ -151,7 +187,7 @@ public class MultiMcLibrary : LibraryPlugin
         // Update game actions and install folder when MultiMC folder path changes
         if (before.MultiMcPath != after.MultiMcPath)
         {
-            DetectMultiMcClient();
+            DetectLauncher();
 
             if (Launcher == null)
             {
@@ -303,7 +339,7 @@ public class MultiMcLibrary : LibraryPlugin
         // Currently this file is read once for every game, so that you don't need to restart Playnite if the config
         // changes. Could use something more sophisticated in the future.
         var multimcCfgPath = Launcher.ConfigPath;
-        return Path.GetFullPath(Path.Combine(Launcher.InstallDirectory, LoadCfgFile<MultiMcCfg>(multimcCfgPath).InstanceDir));
+        return Path.GetFullPath(Path.Combine(Launcher.DataDirectory, LoadCfgFile<MultiMcCfg>(multimcCfgPath).InstanceDir));
     }
 
     private static T LoadCfgFile<T>(string cfgPath) where T : class, new()

@@ -84,6 +84,7 @@ public class MultiMcLibrarySettingsViewModel : ObservableObject, ISettings
         // Executed before EndEdit is called and EndEdit is not called if false is returned.
         // List of errors is presented to user if verification fails.
         errors = new List<string>();
+        _plugin.VerifySettings(errors);
         return true;
     }
 }
