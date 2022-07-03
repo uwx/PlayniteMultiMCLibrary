@@ -1,6 +1,6 @@
-# Playnite MultiMC Library Extension
+# Playnite MultiMC/PolyMC Library Extension
 
-Adds support for importing [MultiMC](https://multimc.org/) instances to [Playnite](https://playnite.link/). Requires Playnite 9.
+Adds support for importing [MultiMC](https://multimc.org/) or [PolyMC](https://polymc.org/) instances to [Playnite](https://playnite.link/). Requires Playnite 9.
 
 ## Installation
 
@@ -10,6 +10,6 @@ You have to restart Playnite after installing the extension.
 
 ## Usage
 
-In your Playnite add-on settings, go to Extension settings > Libraries > MultiMC, and set the path to your MultiMC installation folder.
+In your Playnite add-on settings, go to Extension settings > Libraries > MultiMC/PolyMC, and set the path to your MultiMC or PolyMC installation folder.
 
-Playnite will update your library automatically upon launch, but you can go to Update Game Library > MultiMC to do so manually.
+Playnite will update your library automatically upon launch, but you can go to Update Game Library > MultiMC/PolyMC to do so manually.
