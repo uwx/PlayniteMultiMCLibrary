@@ -1,6 +1,6 @@
-# Playnite MultiMC/PolyMC Library Extension
+# Playnite MultiMC/PolyMC/PrismLauncher Library Extension
 
-Adds support for importing [MultiMC](https://multimc.org/) or [PolyMC](https://polymc.org/) instances to [Playnite](https://playnite.link/). Requires Playnite 9.
+Adds support for importing [MultiMC](https://multimc.org/) or [PolyMC](https://polymc.org/) or [PrismLauncher](https://prismlauncher.org/) instances to [Playnite](https://playnite.link/). Requires Playnite 9.
 
 ## Installation
 
