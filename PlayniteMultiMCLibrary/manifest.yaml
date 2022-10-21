@@ -1,5 +1,11 @@
 AddonId: MultiMClibrary_6ab2531e-4800-404b-a938-4421b28a9f3e
 Packages:
+  - Version: 1.5
+    RequiredApiVersion: 6.1.0
+    ReleaseDate: 2022-10-20
+    PackageUrl: https://github.com/uwx/PlayniteMultiMCLibrary/blob/master/PlayniteMultiMCLibrary/Packed/MultiMClibrary_6ab2531e-4800-404b-a938-4421b28a9f3e_1_5.pext?raw=true
+    Changelog:
+      - 'Add support for Prism'
   - Version: 1.4
     RequiredApiVersion: 6.1.0
     ReleaseDate: 2022-06-21
