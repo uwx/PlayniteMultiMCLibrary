@@ -25,17 +25,17 @@ public abstract class BaseLauncher
     public abstract string Name { get; }
 
     /// <summary>
-    /// Path to MultiMC.exe or PolyMC.exe
+    /// Path to MultiMC.exe or PolyMC.exe or PrismLauncher.exe
     /// </summary>
     public abstract string ExecutablePath { get; }
 
     /// <summary>
-    /// Path to multimc.cfg or polymc.cfg
+    /// Path to multimc.cfg or polymc.cfg or prismlauncher.cfg
     /// </summary>
     public abstract string ConfigPath { get; }
 
     /// <summary>
-    /// Name of the running process for MultiMC or PolyMC
+    /// Name of the running process for MultiMC or PolyMC or PrismLauncher
     /// </summary>
     public abstract string ProcessName { get; }
 
@@ -90,6 +90,25 @@ public sealed class PolyMcLauncher : BaseLauncher
     }
 }
 
+public sealed class PrismLauncher : BaseLauncher
+{
+    public override string Name => "PrismLauncher";
+    public static string RelativeExecutablePath => "prismlauncher.exe";
+    public override string ExecutablePath => Path.Combine(InstallDirectory, RelativeExecutablePath);
+    public override string ConfigPath => Path.Combine(DataDirectory, "prismlauncher.cfg");
+    public override string ProcessName => "PrismLauncher";
+    public override string IconName => "icon-prismlauncher.png";
+    public override string DataDirectory { get; }
+
+    public PrismLauncher(string installDirectory) : base(installDirectory)
+    {
+        var isPortable = File.Exists(Path.Combine(installDirectory, "portable.txt"));
+        DataDirectory = isPortable
+            ? InstallDirectory
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PrismLauncher"); // TODO test as admin
+    }
+}
+
 public class MultiMcLibrary : LibraryPlugin
 {
     internal static readonly string AssemblyPath = Path.GetDirectoryName(typeof(MultiMcLibrary).Assembly.Location) ?? ".";
@@ -101,7 +120,7 @@ public class MultiMcLibrary : LibraryPlugin
 
     public override Guid Id { get; } = Guid.Parse("6ab2531e-4800-404b-a938-4421b28a9f3e");
 
-    public override string Name => "MultiMC/PolyMC";
+    public override string Name => "MultiMC/PolyMC/Prism";
 
     // Implementing Client adds ability to open it via special menu in playnite.
     public override LibraryClient Client { get; }
@@ -164,6 +183,10 @@ public class MultiMcLibrary : LibraryPlugin
         {
             Launcher = new PolyMcLauncher(rootFolder);
         }
+        else if (File.Exists(Path.Combine(rootFolder, PrismLauncher.RelativeExecutablePath)))
+        {
+            Launcher = new PrismLauncher(rootFolder);
+        }
         else
         {
             Launcher = null;
@@ -175,7 +198,7 @@ public class MultiMcLibrary : LibraryPlugin
         DetectLauncher();
         if (Launcher == null)
         {
-            errors.Add($"The path to your MultiMC/PolyMC installation isn't valid:\n{Settings.MultiMcPath}");
+            errors.Add($"The path to your launcher installation isn't valid:\n{Settings.MultiMcPath}");
         }
     }
 
@@ -265,7 +288,7 @@ public class MultiMcLibrary : LibraryPlugin
     internal void DisplayLauncherError()
     {
         PlayniteApi.Dialogs.ShowErrorMessage(
-            $"The path to your MultiMC/PolyMC installation isn't valid:\n{Settings.MultiMcPath}",
+            $"The path to your launcher installation isn't valid:\n{Settings.MultiMcPath}",
             "MultiMC Library Plugin Error"
         );
     }
